@@ -1,0 +1,8 @@
+(function(root){
+const defaults={plan:'standard',cycle:'auto',bonus:false,bill:70,months:1,credits:2000,gift:2000,packCredits:1000,packPrice:50,wbCurrency:'CNY',model:'proPeak',apiCurrency:'USD',inputPrice:1.32,cachePrice:.044,outputPrice:3.96,fx:7.1,days:22,tasks:10,input:30000,output:5000,cache:20,multiplier:1,creditTask:20,fee:0,fixed:0,setup:0,amort:12,hourly:0,wbMinutes:0,apiMinutes:0,tool:0,limit:10000};
+function unit(s){const currency=s.apiCurrency==='USD'?s.fx:1;return ((s.input*((1-s.cache/100)*s.inputPrice+s.cache/100*s.cachePrice)+s.output*s.outputPrice)/1e6*s.multiplier*currency+s.tool)*(1+s.fee/100)}
+function calc(s,n=s.days*s.tasks){const quota=s.credits+(s.bonus?s.gift:0),used=n*s.creditTask,packs=Math.max(0,Math.ceil((used-quota)/s.packCredits-1e-10)),wbFx=s.wbCurrency==='USD'?s.fx:1,subscription=s.bill/s.months*wbFx,topup=packs*s.packPrice*wbFx,apiUsage=n*unit(s),apiFixed=s.fixed+s.setup/s.amort;return{n,quota,used,packs,subscription,topup,apiUsage,apiFixed,wbTime:n*s.wbMinutes*s.hourly/60,apiTime:n*s.apiMinutes*s.hourly/60,wb:subscription+topup+n*s.wbMinutes*s.hourly/60,api:apiUsage+apiFixed+n*s.apiMinutes*s.hourly/60,upfront:s.bill*wbFx,remaining:quota+packs*s.packCredits-used}}
+function compare(s,n){const c=calc(s,n),d=c.wb-c.api;return Math.abs(d)<1e-7?'equal':d<0?'wb':'api'}
+function ranges(s){const out=[];let start=0,last=compare(s,0);for(let n=1;n<=s.limit;n++){const current=compare(s,n);if(current!==last){out.push({start,end:n-1,winner:last});start=n;last=current}}out.push({start,end:s.limit,winner:last});return out}
+const api={defaults,unit,calc,compare,ranges};if(typeof module!=='undefined')module.exports=api;root.Cost=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
